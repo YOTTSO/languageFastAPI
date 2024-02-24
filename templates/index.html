@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <title>NLTK Data Viewer</title>
+</head>
+<body>
+    <h1>NLTK Data Viewer</h1>
+    <p>Выберите датасет или модель:</p>
+    <select id="nltk-data">
+        <option value="punkt">Punkt Sentence Tokenizer</option>
+        <option value="stopwords">Stop Words</option>
+    </select>
+    <div id="output"></div>
+    <h1>Flask File Upload Example</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" id="file" >
+    </form>
+    <script>
+        // Определяем функцию, которая будет вызываться при выборе файла
+        function handleFileSelect(event) {
+            // Получаем выбранный файл
+            var file = event.target.files[0];
+            // Создаем объект FormData, который позволяет отправлять файлы в запросе
+            var formData = new FormData();
+            // Добавляем файл в объект FormData
+            formData.append("file", file);
+            // Отправляем запрос на сервер с помощью jQuery
+            $.ajax({
+                url: "/upload", // URL-адрес, на который отправляем запрос
+                type: "POST", // Метод HTTP, который используем
+                data: formData, // Данные, которые отправляем
+                processData: false, // Отключаем обработку данных jQuery
+                contentType: false, // Отключаем установку заголовка Content-Type
+                success: function(data) { // Функция, которая будет вызвана при успешном ответе
+                    // Выводим данные в элемент div с id="result"
+                    $("#result").html(data);
+                },
+                error: function(error) { // Функция, которая будет вызвана при ошибке
+                    // Выводим сообщение об ошибке в элемент div с id="result"
+                    $("#result").html("Error: " + error.statusText);
+                }
+            });
+        }
+        // Добавляем обработчик события change для элемента input с id="file-input"
+        $("#file").on("change", handleFileSelect);
+    </script>
+    <table>
+    <thead>
+        <tr>
+            <th>Текст</th>
+            <th>Лексемы</th>
+            <th>Взаимосвязи</th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+        <!-- Здесь будут вставляться данные из fastapi -->
+    </tbody>
+    </table>
+    <button type="button" onclick="getData()">Обновить</button>
+    <script>
+    function getData() {
+        // Отправляем GET запрос на эндпоинт fastapi, который возвращает список объектов с данными
+        $.get("/get_data", function(data) {
+            // Очищаем содержимое тела таблицы
+            $("#table-body").empty();
+            // Проходим по каждому объекту в списке данных
+            $.each(data, function(index, item) {
+                // Создаем строку таблицы с двумя ячейками
+                var row = $("<tr></tr>");
+                var cell1 = $("<td></td>").text(item.raw_text);
+                var cell2 = $("<td></td>").text(item.tokens);
+                var cell3 = $("<td></td>").text(item.collocations);
+                // Добавляем ячейки в строку
+                row.append(cell1, cell2, cell3);
+                // Добавляем строку в тело таблицы
+                $("#table-body").append(row);
+            });
+        });
+    }
+    // Вызываем функцию при загрузке страницы
+    $(document).ready(getData);
+    </script>
+</body>
+</html>
