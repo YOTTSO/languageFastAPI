@@ -2,8 +2,8 @@ import nltk
 import string
 import pymorphy2
 
-#nltk.download('popular')
-
+#nltk.download('russian')
+#nltk.download('punkt')
 
 class Analyzer:
     def __init__(self):
@@ -15,7 +15,7 @@ class Analyzer:
         result = []
         words = nltk.word_tokenize(text)
         for word in words:
-            if word not in self.stop_words and word not in string.punctuation:
+            if (word not in self.stop_words) and (word not in string.punctuation):
                 result.append(word)
         return result
 
@@ -32,5 +32,5 @@ class Analyzer:
         finder = nltk.BigramCollocationFinder.from_words(
             words)
         finder.apply_freq_filter(1)
-        tuple_list = finder.nbest(self.bigram_measures.pmi, 100000)
+        tuple_list = finder.nbest(self.bigram_measures.pmi, 10)
         return list(list(t) for t in zip(*tuple_list))
