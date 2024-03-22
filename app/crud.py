@@ -1,8 +1,8 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from database import sync_engine, async_engine, Base, SessionLocal
-from schemas import Text, CurrentTable
-from models import TextsOrm, CurrentTableOrm
+from app.database import sync_engine, async_engine, Base, SessionLocal
+from app.schemas import Text, CurrentTable
+from app.models import TextsOrm, CurrentTableOrm
 
 
 def create_text(db: Session, text: Text):

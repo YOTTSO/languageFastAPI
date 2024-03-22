@@ -1,13 +1,11 @@
-import json
-
 from fastapi import FastAPI, Request, UploadFile, Depends, File, WebSocket
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from analyzer import Analyzer
-from crud import create_text, get_text, get_text_by_id, set_buffer, get_current_table
-from database import SessionLocal, sync_engine, Base
-from schemas import Text, CurrentTable
+from app.analyzer import Analyzer
+from app.crud import create_text, get_text, get_text_by_id, set_buffer, get_current_table
+from app.database import SessionLocal, sync_engine, Base
+from app.schemas import Text, CurrentTable
 
 Base.metadata.create_all(bind=sync_engine)
 

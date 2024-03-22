@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
-from database import Base
+from app.database import Base
 
 
 class TextsOrm(Base):
