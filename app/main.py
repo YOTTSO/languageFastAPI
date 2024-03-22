@@ -1,8 +1,9 @@
+import json
+
 from fastapi import FastAPI, Request, UploadFile, Depends, File, WebSocket
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-
 from analyzer import Analyzer
 from crud import create_text, get_text, get_text_by_id, set_buffer, get_current_table
 from database import SessionLocal, sync_engine, Base
