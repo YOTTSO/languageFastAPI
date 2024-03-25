@@ -15,7 +15,7 @@ class TextsOrm(Base):
 class CurrentTableOrm(Base):
     __tablename__ = 'current_table'
 
-    name = Column(String, nullable=True, primary_key=True)
+    name = Column(String, nullable=False, primary_key=True)
 
 
 # class TextsOrm(Base):

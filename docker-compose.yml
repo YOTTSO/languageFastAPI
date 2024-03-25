@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+    db:
+        image: postgres:15
+        container_name: db
+        env_file:
+            - .env-non-dev
+
+    app:
+        build:
+            context: .
+        env_file:
+            - .env-non-dev
+        ports:
+            - "7777:8000"
+        depends_on:
+            - db

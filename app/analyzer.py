@@ -2,8 +2,8 @@ import nltk
 import string
 import pymorphy2
 
-#nltk.download('russian')
-#nltk.download('punkt')
+nltk.download('russian')
+nltk.download('popular')
 
 class Analyzer:
     def __init__(self):
