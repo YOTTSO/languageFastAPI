@@ -12,12 +12,10 @@ def create_text(db: Session, text_new: Text):
         db.add(text_db)
         db.commit()
     else:
-        text_db = get_text_by_id(db=db, name=text_new.name)[0]
+        text_db = db.query(TextsOrm).filter(TextsOrm.name == text_new.name).one()
         text_db.raw_text = text_new.raw_text
-        db.flush()
         text_db.collocations = text_new.collocations
         text_db.tokens = text_new.tokens
-        db.flush()
         db.commit()
 
 
