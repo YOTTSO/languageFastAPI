@@ -7,7 +7,7 @@ class TextsOrm(Base):
     __tablename__ = 'texts'
 
     name = Column(String, primary_key=True, index=True, nullable=False)
-    raw_text = Column(String, nullable=False)
+    raw_text = Column(String, nullable=True)
     tokens = Column(ARRAY(String), nullable=True)
     collocations = Column(ARRAY(String), nullable=True)
 

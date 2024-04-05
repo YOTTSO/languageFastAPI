@@ -1,22 +1,23 @@
-from sqlalchemy import text, select
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.schemas import Text, CurrentTable
 from app.models import TextsOrm, CurrentTableOrm
 
 
-def create_text(db: Session, text: Text):
+def create_text(db: Session, text_new: Text):
     texts = get_text(db)
     texts_name = [i.name for i in texts]
-    if text.name not in texts_name:
-        text_db = TextsOrm(**text.model_dump())
+    if text_new.name not in texts_name:
+        text_db = TextsOrm(**text_new.model_dump())
         db.add(text_db)
         db.commit()
     else:
-        text_db_new = TextsOrm(**text.model_dump())
-        text_db = get_text_by_id(db=db, name=text.name)[0]
-        text_db.raw_text = text_db_new.raw_text
-        text_db.collocations = text_db_new.collocations
-        text_db.tokens = text_db_new.tokens
+        text_db = get_text_by_id(db=db, name=text_new.name)[0]
+        text_db.raw_text = text_new.raw_text
+        db.flush()
+        text_db.collocations = text_new.collocations
+        text_db.tokens = text_new.tokens
+        db.flush()
         db.commit()
 
 
@@ -54,14 +55,5 @@ def get_current_table(db: Session):
 
 
 def get_text_by_id(db: Session, name: str):
-    text = db.query(TextsOrm).filter(TextsOrm.name == name).one() if not None else None
-    return [Text.model_validate(text)]
-
-# def insert_data():
-#     with SessionLocal() as session:
-#         session.add()
-#
-#
-# def select_data():
-#     with SessionLocal() as session:
-#         return session.query(TextsOrm).all()
+    texts = db.query(TextsOrm).filter(TextsOrm.name == name).one() if not None else None
+    return [Text.model_validate(texts)]
