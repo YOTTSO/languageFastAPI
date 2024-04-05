@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Обработка текстовых данных</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      h1 {
+        text-align: center;
+        color: #000000;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .edit-mode-container {
+        display: flex;
+        align-items: center;
+      }
+      .edit-mode-toggle {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+      .edit-mode-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+      input:checked + .slider {
+        background-color: #4caf50;
+      }
+      input:focus + .slider {
+        box-shadow: 0 0 1px #4caf50;
+      }
+      input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+      }
+      .slider.round {
+        border-radius: 34px;
+      }
+      .slider.round:before {
+        border-radius: 50%;
+      }
+      .data-widget {
+        background-color: #e6f2ff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin: 10px;
+        max-width: 800px;
+        width: 100%;
+      }
+      .data-widget h2 {
+        margin-top: 0;
+        color: #000000;
+        margin-bottom: 10px;
+      }
+      .data-widget .value-container {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+        position: relative;
+      }
+      .data-widget ul {
+        list-style-type: none;
+        padding: 0;
+        margin-bottom: 10px;
+      }
+      .data-widget li {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+      }
+      .value-container span.collocation {
+        background-color: yellow;
+        position: relative;
+      }
+      .value-container span.collocation:hover::after {
+        content: attr(data-collocation);
+        position: absolute;
+        background-color: #333;
+        color: #fff;
+        padding: 5px;
+        border-radius: 3px;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+      .editable-field {
+        border: 1px solid #ccc;
+        padding: 5px;
+        border-radius: 3px;
+        background-color: #fff;
+      }
+      .save-button {
+        position: absolute;
+        bottom: -35px;
+        right: 10px;
+        display: none;
+        padding: 8px 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .edit-mode-label {
+        font-size: 14px;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>
+      Анализ текста естественного языка
+      <div style="margin-left: 20px" class="edit-mode-container">
+        <span class="edit-mode-label">Режим редактирования</span>
+        <label class="edit-mode-toggle">
+          <input type="checkbox" /> <span class="slider round"></span>
+        </label>
+      </div>
+    </h1>
+    <div id="data-container"></div>
+    <script>
+      let editMode = false;
+
+      function fetchData() {
+        const dataContainer = document.getElementById("data-container");
+        dataContainer.innerHTML = "<p>Загрузка данных...</p>";
+
+        const urlParts = window.location.pathname.split("/");
+        const textName = urlParts[urlParts.length - 1];
+
+        if (!textName) {
+          dataContainer.innerHTML = "<p>Ошибка: имя файла не указано.</p>";
+          return;
+        }
+
+        fetch(`/get_info/${textName}`)
+          .then((response) => response.json())
+          .then((data) => {
+            dataContainer.innerHTML = "";
+
+            data.forEach((item) => {
+              const widget = document.createElement("div");
+              widget.classList.add("data-widget");
+
+              const nameHeader = document.createElement("h2");
+              nameHeader.textContent = "Имя файла:";
+              widget.appendChild(nameHeader);
+
+              const nameValue = document.createElement("div");
+              nameValue.classList.add("value-container");
+              const nameValueInput = document.createElement("input");
+              nameValueInput.value = item.name;
+              nameValueInput.classList.add("editable-field");
+              nameValueInput.disabled = !editMode;
+              nameValue.appendChild(nameValueInput);
+              widget.appendChild(nameValue);
+
+              const rawTextHeader = document.createElement("h2");
+              rawTextHeader.textContent = "Исходный текст:";
+              widget.appendChild(rawTextHeader);
+
+              const rawTextValue = document.createElement("div");
+              rawTextValue.classList.add("value-container");
+
+              const editableField = document.createElement("div");
+              editableField.classList.add("editable-field");
+              editableField.contentEditable = editMode;
+              editableField.style.whiteSpace = "pre-wrap";
+
+              const saveButton = document.createElement("button");
+              saveButton.textContent = "Сохранить";
+              saveButton.classList.add("save-button");
+              saveButton.style.display = editMode ? "block" : "none";
+
+              saveButton.addEventListener("click", () =>
+                saveData(nameValueInput, editableField)
+              );
+
+              if (!editMode) {
+                const formattedRawText = item.raw_text
+                  .split(" ")
+                  .map((word) => {
+                    const collocation = item.collocations.find((coll) =>
+                      coll.includes(word)
+                    );
+                    if (collocation) {
+                      const collocationStr = collocation
+                        .filter((w) => w !== word)
+                        .join(", ");
+                      return `<span class="collocation" data-collocation="${collocationStr}">${word}</span>`;
+                    } else {
+                      return word;
+                    }
+                  })
+                  .join(" ");
+                editableField.innerHTML = formattedRawText;
+              } else {
+                editableField.textContent = item.raw_text;
+              }
+
+              rawTextValue.appendChild(editableField);
+              rawTextValue.appendChild(saveButton);
+              widget.appendChild(rawTextValue);
+
+              const tokensHeader = document.createElement("h2");
+              tokensHeader.textContent = "Токены:";
+              widget.appendChild(tokensHeader);
+
+              const tokensValue = document.createElement("div");
+              tokensValue.classList.add("value-container");
+              tokensValue.textContent = item.tokens.join(", ");
+              widget.appendChild(tokensValue);
+
+              const collocationsHeader = document.createElement("h2");
+              collocationsHeader.textContent = "Коллокации:";
+              widget.appendChild(collocationsHeader);
+
+              const collocationsUl = document.createElement("ul");
+              item.collocations.forEach((collocation) => {
+                const collocItem = document.createElement("li");
+                collocItem.textContent = collocation.join(", ");
+                collocationsUl.appendChild(collocItem);
+              });
+              widget.appendChild(collocationsUl);
+
+              dataContainer.appendChild(widget);
+            });
+          })
+          .catch((error) => {
+            dataContainer.innerHTML = "<p>Ошибка при получении данных.</p>";
+            console.error("Ошибка:", error);
+          });
+      }
+
+      function toggleEditMode() {
+        const editModeToggle = document.querySelector(
+          ".edit-mode-toggle input"
+        );
+        editMode = editModeToggle.checked;
+
+        const editableFields = document.querySelectorAll(".editable-field");
+        const saveButtons = document.querySelectorAll(".save-button");
+
+        editableFields.forEach((field) => {
+          if (field.tagName.toLowerCase() === "input") {
+            field.disabled = !editMode;
+          } else {
+            field.contentEditable = editMode;
+          }
+        });
+
+        saveButtons.forEach((button) => {
+          button.style.display = editMode ? "block" : "none";
+        });
+      }
+
+      function saveData(nameInput, rawTextValue) {
+        const data = {
+          name: nameInput.value,
+          raw_text: rawTextValue.textContent,
+        };
+        fetch("/save_data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Данные успешно сохран  ены");
+            // location.reload();
+          })
+          .catch((error) => {
+            console.error("Ошибка при сохранении данных:", error);
+          });
+      }
+      const editModeToggle = document.querySelector(".edit-mode-toggle input");
+      editModeToggle.addEventListener("change", toggleEditMode);
+
+      const saveButtons = document.querySelectorAll(".save-button");
+      saveButtons.forEach((button) => {
+        button.addEventListener("click", (event) => saveData(event));
+      });
+
+      fetchData();
+    </script>
+  </body>
+</html>
