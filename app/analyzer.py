@@ -1,9 +1,13 @@
+import re
 import nltk
 import string
 import pymorphy2
 
+from app.schemas import XmlText
+
 nltk.download('russian')
 nltk.download('popular')
+
 
 class Analyzer:
     def __init__(self):
@@ -34,3 +38,54 @@ class Analyzer:
         finder.apply_freq_filter(1)
         tuple_list = finder.nbest(self.bigram_measures.pmi, 10)
         return list(list(t) for t in zip(*tuple_list))
+
+    def create_xml(self, text):
+        text = text[0].raw_text
+        paragraphs = text.split('\n\n')
+        tagged_text = '<?xml version="1.0" encoding="utf-8"?><text>'
+        paragraphs = paragraphs[0].split("\n")
+        content = '\n'.join(text.splitlines()[3:])
+        for paragraph in paragraphs[3:]:
+            if paragraph not in ['', ' ']:
+                tagged_text += '\n <p>'
+                # Разбиваем абзац на предложения
+                sentences = re.split(r'(?<=[.!?])\s+', paragraph)
+                for sentence in sentences:
+                    words_and_punctuation = re.findall(r'\w+|[^\w\s]', sentence)  # Разделяем слова и знаки препинания
+                    tagged_sentence = ''
+                    for word_punct in words_and_punctuation:
+                        if re.match(r'\w+', word_punct):  # Если это слово
+                            morph = pymorphy2.MorphAnalyzer(lang='ru')
+                            parsed_word = morph.parse(word_punct)[0].tag.cyr_repr
+
+                            if "ПРИЛ " not in parsed_word and "ЧИСЛ " not in parsed_word:
+                                if "," in parsed_word:
+                                    parts = parsed_word.split(",", 1)
+                                    morph_tags = f'<ana lemma="{morph.parse(word_punct)[0].normal_form}" pos="{parts[0]}" gram="{parts[1]}"'
+                                else:
+                                    morph_tags = f'<ana lemma="{morph.parse(word_punct)[0].normal_form}" pos="{parsed_word}" gram=""'
+                            else:
+                                parts = parsed_word.split(" ", 1)
+                                morph_tags = f'<ana lemma="{morph.parse(word_punct)[0].normal_form}" pos="{parts[0]}" gram="{parts[1]}"'
+
+                            tagged_sentence += f'\n<w>{word_punct} {morph_tags[:-1]}" /></w>'
+                        elif word_punct in string.punctuation:  # Если это знак препинания
+                            tagged_sentence += f'\n<pun>{word_punct}</pun>'
+
+                    tagged_sentence = tagged_sentence.strip()  # Удаляем лишние пробелы в конце предложения
+                    tagged_sentence = f'\n<s>\n{tagged_sentence}</s>'  # Добавляем тег предложения
+                    tagged_text += tagged_sentence
+
+                tagged_text += '</p>'  # Добавляем тег абзаца
+        tagged_text += '</text>'
+        xml = XmlText
+        xml.filename = text.name
+        xml.title = paragraphs[0].split(":")[1].lstrip().rstrip()
+        xml.author = paragraphs[1].split(":")[1].lstrip().rstrip()
+        xml.tags = paragraphs[2].split(":")[1].lstrip().rstrip()
+        xml.markup = tagged_text
+        xml.raw_text = content
+
+        return xml
+
+

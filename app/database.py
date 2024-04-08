@@ -5,7 +5,7 @@ from config import settings
 
 engine = create_engine(
     url=settings.DATABASE_URL_psycopg,
-    echo=True
+    echo=False
 )
 
 SessionLocal = _orm.sessionmaker(expire_on_commit=False, autocommit=False, autoflush=True, bind=engine)

@@ -63,3 +63,10 @@ def save_data(text: Text, db: Session = _fastapi.Depends(get_db)):
     text.tokens = handler.leksems(text.raw_text)
     text.collocations = handler.analyze(text.raw_text)
     create_text(text_new=text, db=db)
+
+@app.get("/texts/{text_name}/test")
+def test(text_name: str, db: Session = _fastapi.Depends(get_db)):
+    handler = TextHandler()
+    text = get_text_by_id(db=db, name=text_name)
+    xml = handler.create_xml(text)
+    print(xml)
