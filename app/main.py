@@ -2,7 +2,7 @@ import fastapi as _fastapi
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.analyzer import Analyzer as TextHandler
+from app.analyzer import Analyzer as TextHandler, CorpusManager
 from app.crud import create_text, get_text, get_text_by_id, set_buffer
 from app.database import SessionLocal, engine, Base
 from app.schemas import Text, CurrentTable
@@ -21,7 +21,7 @@ def get_db():
 
 
 templates = Jinja2Templates("templates")
-
+manager = CorpusManager()
 @app.get("/", response_class=HTMLResponse)
 def index(request: _fastapi.Request):
     return templates.TemplateResponse(
@@ -64,9 +64,19 @@ def save_data(text: Text, db: Session = _fastapi.Depends(get_db)):
     text.collocations = handler.analyze(text.raw_text)
     create_text(text_new=text, db=db)
 
-@app.get("/texts/{text_name}/test")
-def test(text_name: str, db: Session = _fastapi.Depends(get_db)):
-    handler = TextHandler()
+@app.post("/generate_markup")
+def generate_markup(text_name: str, db: Session = _fastapi.Depends(get_db)):
     text = get_text_by_id(db=db, name=text_name)
-    xml = handler.create_xml(text)
-    print(xml)
+    xml = manager.generate_xml(text)
+    manager.db_manager.create_xml(xml=xml, db=db)
+    return xml.model_dump_json()
+
+@app.get("/texts/{text_name}/corpus")
+def manager_main(text_name: str, db: Session = _fastapi.Depends(get_db)):
+    return (manager.db_manager.read_xml(db=db, name=text_name)).model_dump_json()
+
+@app.get("/texts/{text_name}/corpus/search")
+def search(text_name: str, tag: str, db: Session = _fastapi.Depends(get_db)):
+    xml = manager.db_manager.read_xml(name=text_name, db=db)
+    result = search(tag=tag, xml=xml, db=db)
+    return result

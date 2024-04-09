@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from app.schemas import Text, CurrentTable
-from app.models import TextsOrm, CurrentTableOrm
+from app.schemas import Text, CurrentTable, XmlText
+from app.models import TextsOrm, CurrentTableOrm, XmlTextOrm
 
 
 def create_text(db: Session, text_new: Text):
@@ -55,3 +55,30 @@ def get_current_table(db: Session):
 def get_text_by_id(db: Session, name: str):
     texts = db.query(TextsOrm).filter(TextsOrm.name == name).one() if not None else None
     return [Text.model_validate(texts)]
+
+class DBCorpusManager:
+    def create_xml(self, xml: XmlText, db: Session):
+        xml_texts = [i.filename for i in self.read_all_xml(db)]
+        if xml.filename not in xml_texts:
+            xml_db = XmlTextOrm(**xml.model_dump())
+            db.add(xml_db)
+            db.commit()
+        elif xml in xml_texts:
+            self.update_xml(xml, db)
+
+    def update_xml(self, new_xml: XmlText, db: Session):
+        old_xml = db.query(XmlTextOrm).filter(XmlTextOrm.filename == new_xml.filename).one()
+        old_xml.title = new_xml.title
+        old_xml.author = new_xml.author
+        old_xml.tags = new_xml.tags
+        old_xml.markup = new_xml.markup
+        old_xml.raw_text = new_xml.raw_text
+        db.commit()
+
+    def read_xml(self, db: Session, name: str):
+        xml_text = db.query(XmlTextOrm).filter(XmlTextOrm.filename == name).one()
+        return XmlText.model_validate(xml_text)
+
+    def read_all_xml(self, db: Session):
+        xml_texts = db.query(XmlTextOrm).all()
+        return [XmlText.model_validate(item) for item in xml_texts]

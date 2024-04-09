@@ -12,7 +12,7 @@ class TextsOrm(Base):
     collocations = Column(ARRAY(String), nullable=True)
 
 
-class XmlText:
+class XmlTextOrm(Base):
     __tablename__ = 'xml'
 
     title = Column(String, nullable=False, primary_key=True, index=True)

@@ -3,11 +3,19 @@ import nltk
 import string
 import pymorphy2
 
+from app.crud import DBCorpusManager
 from app.schemas import XmlText
 
 nltk.download('russian')
 nltk.download('popular')
 
+
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
 
 class Analyzer:
     def __init__(self):
@@ -39,8 +47,15 @@ class Analyzer:
         tuple_list = finder.nbest(self.bigram_measures.pmi, 10)
         return list(list(t) for t in zip(*tuple_list))
 
-    def create_xml(self, text):
-        text = text[0].raw_text
+
+class CorpusManager(Analyzer, metaclass=Singleton):
+    def __init__(self):
+        super().__init__()
+        self.db_manager = DBCorpusManager()
+
+    def generate_xml(self, text_obj):
+        text_obj = text_obj[0]
+        text = text_obj.raw_text
         paragraphs = text.split('\n\n')
         tagged_text = '<?xml version="1.0" encoding="utf-8"?><text>'
         paragraphs = paragraphs[0].split("\n")
@@ -78,14 +93,13 @@ class Analyzer:
 
                 tagged_text += '</p>'  # Добавляем тег абзаца
         tagged_text += '</text>'
-        xml = XmlText
-        xml.filename = text.name
+        xml = XmlText(filename=text_obj.name)
         xml.title = paragraphs[0].split(":")[1].lstrip().rstrip()
         xml.author = paragraphs[1].split(":")[1].lstrip().rstrip()
         xml.tags = paragraphs[2].split(":")[1].lstrip().rstrip()
         xml.markup = tagged_text
         xml.raw_text = content
-
         return xml
 
-
+    def search(self, tag: str, text_name: str, xml: XmlText):
+        pass
