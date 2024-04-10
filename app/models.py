@@ -1,4 +1,6 @@
-from sqlalchemy import Column, String, ARRAY, ForeignKey
+from typing import List
+
+from sqlalchemy import Column, String, ARRAY, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
@@ -19,7 +21,8 @@ class XmlTextOrm(Base):
     filename = Column(String, ForeignKey('texts.name'), nullable=False)
     author = Column(String, nullable=False)
     tags = Column(String, nullable=True)
-    markup = Column(String, nullable=True)
+    text_markup = Column(JSON, nullable=True)
+    words_markup = Column(ARRAY(JSON), nullable=True)
     raw_text = Column(String, nullable=True)
 
 class CurrentTableOrm(Base):
