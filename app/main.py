@@ -64,7 +64,7 @@ def save_data(text: Text, db: Session = _fastapi.Depends(get_db)):
     text.collocations = handler.analyze(text.raw_text)
     create_text(text_new=text, db=db)
 
-@app.post("/generate_markup")
+@app.get("/generate_markup")
 def generate_markup(text_name: str, db: Session = _fastapi.Depends(get_db)):
     text = get_text_by_id(db=db, name=text_name)
     xml = manager.generate_xml(text)
@@ -75,8 +75,8 @@ def generate_markup(text_name: str, db: Session = _fastapi.Depends(get_db)):
 def manager_main(text_name: str, db: Session = _fastapi.Depends(get_db)):
     return (manager.db_manager.read_xml(db=db, name=text_name)).model_dump_json()
 
+
 @app.get("/texts/{text_name}/corpus/search")
-def search(text_name: str, tag: str, db: Session = _fastapi.Depends(get_db)):
+def search(text_name, tag: str, db: Session = _fastapi.Depends(get_db)):
     xml = manager.db_manager.read_xml(name=text_name, db=db)
-    result = search(tag=tag, xml=xml, db=db)
-    return result
+    return manager.search(tag=tag, xml=xml)

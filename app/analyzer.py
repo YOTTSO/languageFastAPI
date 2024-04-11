@@ -113,5 +113,9 @@ class CorpusManager(Analyzer, metaclass=Singleton):
         xml.raw_text = content
         return xml
 
-    def search(self, tag: str, text_name: str, xml: XmlText):
-        pass
+    def search(self, tag: str, xml: XmlText):
+        result = []
+        for item in xml.words_markup:
+            if item.pos == tag or item.gram == tag:
+                result.append(item.word)
+        return result

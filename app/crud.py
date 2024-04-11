@@ -71,11 +71,12 @@ class DBCorpusManager:
         old_xml.title = new_xml.title
         old_xml.author = new_xml.author
         old_xml.tags = new_xml.tags
-        old_xml.markup = new_xml.markup
+        old_xml.text_markup = new_xml.text_markup
+        old_xml.words_markup = new_xml.words_markup
         old_xml.raw_text = new_xml.raw_text
         db.commit()
 
-    def read_xml(self, db: Session, name: str):
+    def read_xml(self, name: str, db: Session):
         xml_text = db.query(XmlTextOrm).filter(XmlTextOrm.filename == name).one()
         return XmlText.model_validate(xml_text)
 
