@@ -59,7 +59,6 @@ class CorpusManager(Analyzer, metaclass=Singleton):
         text = text_obj.raw_text
         paragraphs = text.split('\n\n')
         text_markup = TextMarkup(version="1.0", encoding="utf-8")
-        tagged_text = '<?xml version="1.0" encoding="utf-8"?><text>'
         paragraphs = paragraphs[0].split("\n")
         content = '\n'.join(text.splitlines()[3:])
         text_markup.paragraphs = paragraphs[3:]
@@ -69,42 +68,38 @@ class CorpusManager(Analyzer, metaclass=Singleton):
                 text_markup.sentences = sentences
                 for sentence in sentences:
                     words_and_punctuation = re.findall(r'\w+|[^\w\s]', sentence)
-                    tagged_sentence = ''
                     for word_punct in words_and_punctuation:
                         if re.match(r'\w+', word_punct):  # Если это слово
                             morph = pymorphy2.MorphAnalyzer(lang='ru')
                             parsed_word = morph.parse(word_punct)[0].tag.cyr_repr
+                            synsets = nltk.corpus.wordnet.synsets(word_punct)
+                            synonyms = []
+                            antonyms = []
+                            for synset in synsets:
+                                for lemma in synset.lemmas():
+                                    synonyms.append(lemma.name())
+                                    if lemma.antonyms():
+                                        antonyms.append(lemma.antonyms()[0].name())
                             if "ПРИЛ " not in parsed_word and "ЧИСЛ " not in parsed_word:
                                 if "," in parsed_word:
                                     parts = parsed_word.split(",", 1)
-                                    morph_tags = f'<ana lemma="{morph.parse(word_punct)[0].normal_form}" pos="{parts[0]}" gram="{parts[1]}"'
                                     word = WordMarkup(word=word_punct, lemma=morph.parse(word_punct)[0].normal_form,
                                                       pos=parts[0], gram=parts[1])
                                     marked_words.append(word)
                                 else:
-                                    morph_tags = f'<ana lemma="{morph.parse(word_punct)[0].normal_form}" pos="{parsed_word}" gram=""'
                                     word = WordMarkup(word=word_punct, lemma=morph.parse(word_punct)[0].normal_form,
                                                       pos=parsed_word)
                                     marked_words.append(word)
                             else:
                                 parts = parsed_word.split(" ", 1)
-                                morph_tags = f'<ana lemma="{morph.parse(word_punct)[0].normal_form}" pos="{parts[0]}" gram="{parts[1]}"'
                                 word = WordMarkup(word=word_punct, lemma=morph.parse(word_punct)[0].normal_form,
                                                   pos=parts[0], gram=parts[1])
                                 marked_words.append(word)
-                            tagged_sentence += f'\n<w>{word_punct} {morph_tags[:-1]}" /></w>'
 
-                        elif word_punct in string.punctuation:  # Если это знак препинания
-                            tagged_sentence += f'\n<pun>{word_punct}</pun>'
+                        elif word_punct in string.punctuation:
                             word = WordMarkup(word=word_punct)
                             marked_words.append(word)
 
-                    tagged_sentence = tagged_sentence.strip()  # Удаляем лишние пробелы в конце предложения
-                    tagged_sentence = f'\n<s>\n{tagged_sentence}</s>'  # Добавляем тег предложения
-
-
-                tagged_text += '</p>'  # Добавляем тег абзаца
-        tagged_text += '</text>'
         xml = XmlText(filename=text_obj.name)
         xml.title = paragraphs[0].split(":")[1].lstrip().rstrip()
         xml.author = paragraphs[1].split(":")[1].lstrip().rstrip()
