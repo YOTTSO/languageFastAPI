@@ -6,7 +6,7 @@ from app.analyzer import Analyzer as TextHandler, CorpusManager
 from app.crud import create_text, get_text, get_text_by_id, set_buffer
 from app.database import SessionLocal, engine, Base
 from app.schemas import Text, CurrentTable
-
+from app.llm_api import get_synonyms, get_antonyms, chatting
 
 Base.metadata.create_all(bind=engine)
 app = _fastapi.FastAPI(debug=True)
@@ -80,3 +80,9 @@ def manager_main(text_name: str, db: Session = _fastapi.Depends(get_db)):
 def search(text_name, tag: str, db: Session = _fastapi.Depends(get_db)):
     xml = manager.db_manager.read_xml(name=text_name, db=db)
     return manager.search(tag=tag, xml=xml)
+
+@app.get("/texts/{text_name}/corpus/{word}")
+def semantic_analys(word: str):
+    synonyms = get_synonyms(word=word)
+    antonyms = get_antonyms(word=word)
+    return (synonyms, antonyms)

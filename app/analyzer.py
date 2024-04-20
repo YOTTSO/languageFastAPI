@@ -5,6 +5,7 @@ import pymorphy2
 
 from app.crud import DBCorpusManager
 from app.schemas import XmlText, TextMarkup, WordMarkup
+from app.llm_api import get_synonyms, get_antonyms, chatting
 
 nltk.download('russian')
 nltk.download('popular')
@@ -72,14 +73,6 @@ class CorpusManager(Analyzer, metaclass=Singleton):
                         if re.match(r'\w+', word_punct):  # Если это слово
                             morph = pymorphy2.MorphAnalyzer(lang='ru')
                             parsed_word = morph.parse(word_punct)[0].tag.cyr_repr
-                            synsets = nltk.corpus.wordnet.synsets(word_punct)
-                            synonyms = []
-                            antonyms = []
-                            for synset in synsets:
-                                for lemma in synset.lemmas():
-                                    synonyms.append(lemma.name())
-                                    if lemma.antonyms():
-                                        antonyms.append(lemma.antonyms()[0].name())
                             if "ПРИЛ " not in parsed_word and "ЧИСЛ " not in parsed_word:
                                 if "," in parsed_word:
                                     parts = parsed_word.split(",", 1)
