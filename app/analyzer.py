@@ -48,6 +48,14 @@ class Analyzer:
         tuple_list = finder.nbest(self.bigram_measures.pmi, 10)
         return list(list(t) for t in zip(*tuple_list))
 
+    def sentence_analyze(self, text):
+        words = self.tokenize(text)
+        finder = nltk.BigramCollocationFinder.from_words(
+            words)
+        finder.apply_freq_filter(1)
+        tuple_list = finder.nbest(self.bigram_measures.pmi, 10)
+        return list(list(t) for t in zip(*tuple_list))
+
 
 class CorpusManager(Analyzer, metaclass=Singleton):
     def __init__(self):
@@ -68,6 +76,7 @@ class CorpusManager(Analyzer, metaclass=Singleton):
                 sentences = re.split(r'(?<=[.!?])\s+', paragraph)
                 text_markup.sentences = sentences
                 for sentence in sentences:
+                    synergys = self.analyze(sentence)
                     words_and_punctuation = re.findall(r'\w+|[^\w\s]', sentence)
                     for word_punct in words_and_punctuation:
                         if re.match(r'\w+', word_punct):  # Если это слово
@@ -76,17 +85,29 @@ class CorpusManager(Analyzer, metaclass=Singleton):
                             if "ПРИЛ " not in parsed_word and "ЧИСЛ " not in parsed_word:
                                 if "," in parsed_word:
                                     parts = parsed_word.split(",", 1)
+                                    for item in synergys:
+                                        for marked_word in item:
+                                            if word_punct in marked_word:
+                                                synergy = item
                                     word = WordMarkup(word=word_punct, lemma=morph.parse(word_punct)[0].normal_form,
-                                                      pos=parts[0], gram=parts[1])
+                                                      pos=parts[0], gram=parts[1], synergy=synergy)
                                     marked_words.append(word)
                                 else:
+                                    for item in synergys:
+                                        for marked_word in item:
+                                            if word_punct in marked_word:
+                                                synergy = item
                                     word = WordMarkup(word=word_punct, lemma=morph.parse(word_punct)[0].normal_form,
-                                                      pos=parsed_word)
+                                                      pos=parsed_word, synergy=synergy)
                                     marked_words.append(word)
                             else:
+                                for item in synergys:
+                                    for marked_word in synergys:
+                                        if word_punct in marked_word:
+                                            synergy = item
                                 parts = parsed_word.split(" ", 1)
                                 word = WordMarkup(word=word_punct, lemma=morph.parse(word_punct)[0].normal_form,
-                                                  pos=parts[0], gram=parts[1])
+                                                  pos=parts[0], gram=parts[1], synergy=synergy)
                                 marked_words.append(word)
 
                         elif word_punct in string.punctuation:
@@ -101,9 +122,6 @@ class CorpusManager(Analyzer, metaclass=Singleton):
         xml.raw_text = content
         return xml
 
-    def search(self, tag: str, xml: XmlText):
-        result = []
+    def search(self, word: str, xml: XmlText):
         for item in xml.words_markup:
-            if item.pos == tag or item.gram == tag:
-                result.append(item.word)
-        return result
+            return item if item.word == word else None

@@ -27,6 +27,7 @@ class WordMarkup(BaseModel):
     lemma: str | None = None
     gram: str | None = None
     pos: str | None = None
+    synergy: List[str] | None = None
     synonyms: List[str] | None = None
     antonyms: List[str] | None = None
 

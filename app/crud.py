@@ -77,8 +77,8 @@ class DBCorpusManager:
         db.commit()
 
     def read_xml(self, name: str, db: Session):
-        xml_text = db.query(XmlTextOrm).filter(XmlTextOrm.filename == name).one()
-        return XmlText.model_validate(xml_text)
+        xml_text = db.query(XmlTextOrm).filter(XmlTextOrm.filename == name).first()
+        return XmlText.model_validate(xml_text) if xml_text is not None else None
 
     def read_all_xml(self, db: Session):
         xml_texts = db.query(XmlTextOrm).all()
