@@ -11,6 +11,7 @@ COPY requirements.txt /code/requirements.txt
 
 #
 RUN pip install -r /code/requirements.txt
+RUN pip install https://github.com/explosion/spacy-models/releases/download/ru_core_news_sm-3.7.0/ru_core_news_sm-3.7.0.tar.gz
 
 #
 COPY . /code/

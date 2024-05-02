@@ -16,10 +16,7 @@ class Text(BaseModel):
 
 
 class TextMarkup(BaseModel):
-    paragraphs: str | None = None
-    sentences: str | None = None
-    encoding: str | None = None
-    version: str | None = None
+    sentences: dict | None = None
 
 
 class WordMarkup(BaseModel):
@@ -27,7 +24,7 @@ class WordMarkup(BaseModel):
     lemma: str | None = None
     gram: str | None = None
     pos: str | None = None
-    synergy: List[str] | None = None
+    definition: str | None = None
     synonyms: List[str] | None = None
     antonyms: List[str] | None = None
 

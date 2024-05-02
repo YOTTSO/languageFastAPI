@@ -1,3 +1,5 @@
+import os
+
 import fastapi as _fastapi
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -84,16 +86,28 @@ def manager_main(text_name: str, db: Session = _fastapi.Depends(get_db)):
 
 
 @app.get("/texts/{text_name}/corpus/search")
-def search(text_name, tag: str, db: Session = _fastapi.Depends(get_db)):
+def search(text_name: str, word: str, db: Session = _fastapi.Depends(get_db)):
     xml = manager.db_manager.read_xml(name=text_name, db=db)
-    return manager.search(tag=tag, xml=xml)
+    return manager.search(word, xml)
+
+@app.get("/texts/{text_name}/corpus/syntax")
+def syntax_analysis(text_name: str, word: str, db: Session = _fastapi.Depends(get_db)):
+    xml = manager.db_manager.read_xml(name=text_name, db=db)
+    sentences = xml.text_markup.sentences
+    for key, value in sentences.items():
+        if word in value:
+            handler.create_svg(key)
+            return True
+
+
 
 @app.get("/texts/{text_name}/corpus/{word}")
-def semantic_analys(word: str):
+def semantic_analysis(word: str):
+    definition = manager.get_definition(word=word)
     synonyms = get_synonyms(word=word)
     antonyms = get_antonyms(word=word)
-    return (synonyms, antonyms)
+    return definition, synonyms, antonyms
 
-@app.get("/test")
-def test(sentence: str):
-    return handler.sentence_analyze(sentence)
+
+
+

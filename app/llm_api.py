@@ -14,6 +14,7 @@ class Singleton(type):
         return cls._instances[cls]
 
 
+
 def get_synonyms(word: str):
     client = Client(metaclass=Singleton)
     response = client.chat.completions.create(
